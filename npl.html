@@ -1,0 +1,1091 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>NPL Season 3 Predictor – Nepal</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --green:#1a7a3c;--green-l:#e6f5ed;--green-m:#2ecc71;
+  --blue:#1A56A4;--blue-l:#E8F0FB;
+  --red:#C0392B;--red-l:#FBE8E8;
+  --gold:#D4AF37;--gold-l:#FFF8DC;
+  --npl:#0d1f3c;--npl2:#162d52;
+  --bg:#F0F2F5;--surface:#fff;
+  --border:#E2E8F0;--text:#1A202C;--muted:#718096;
+  --r:12px;--shadow:0 2px 12px rgba(0,0,0,0.08);
+}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+
+/* HERO */
+.hero{
+  background:var(--npl);
+  background-image:
+    repeating-linear-gradient(0deg,transparent,transparent 40px,rgba(255,255,255,0.02) 40px,rgba(255,255,255,0.02) 41px),
+    repeating-linear-gradient(90deg,transparent,transparent 40px,rgba(255,255,255,0.02) 40px,rgba(255,255,255,0.02) 41px);
+  padding:2.5rem 1rem 2rem;text-align:center;position:relative;overflow:hidden;
+}
+.hero::after{content:'';position:absolute;bottom:-40px;left:50%;transform:translateX(-50%);
+  width:500px;height:100px;background:radial-gradient(ellipse,rgba(46,204,113,0.1) 0%,transparent 70%);}
+.hero-badge{display:inline-flex;align-items:center;gap:6px;background:rgba(212,175,55,0.18);
+  color:var(--gold);border:1px solid rgba(212,175,55,0.35);font-size:11px;font-weight:700;
+  letter-spacing:0.1em;text-transform:uppercase;padding:5px 14px;border-radius:20px;margin-bottom:14px;}
+.hero h1{font-family:'Bebas Neue',sans-serif;font-size:clamp(2.8rem,10vw,5rem);
+  color:#fff;letter-spacing:0.05em;line-height:0.95;margin-bottom:10px;}
+.hero h1 em{color:var(--green-m);font-style:normal}
+.hero-sub{color:rgba(255,255,255,0.5);font-size:13px;max-width:380px;margin:0 auto 4px;}
+.hero-flag{font-size:22px;margin-bottom:6px;}
+.sync-dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:#2ecc71;margin-right:5px;animation:pulse 2s infinite}
+.sync-dot.offline{background:#E57368;animation:none}
+.sync-status{color:rgba(255,255,255,0.4);font-size:11px;margin-top:6px}
+
+.wrap{max-width:740px;margin:0 auto;padding:0 1rem}
+
+/* LOADING */
+#loading-screen{position:fixed;inset:0;background:var(--npl);display:flex;flex-direction:column;
+  align-items:center;justify-content:center;z-index:1000;gap:16px}
+#loading-screen .spin{width:40px;height:40px;border:3px solid rgba(46,204,113,0.25);
+  border-top-color:var(--green-m);border-radius:50%;animation:spin 0.8s linear infinite}
+#loading-screen p{color:rgba(255,255,255,0.6);font-size:14px}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* JOIN */
+#welcome-screen{padding:1.5rem 0 3rem;display:none}
+.join-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:2rem;box-shadow:var(--shadow)}
+.join-card h2{font-size:20px;font-weight:700;margin-bottom:6px}
+.join-card p{font-size:14px;color:var(--muted);margin-bottom:1.5rem;line-height:1.6}
+.input-row{display:flex;gap:8px;margin-bottom:1.5rem}
+.input-row input{flex:1;padding:11px 14px;border:1px solid var(--border);border-radius:8px;
+  font-size:15px;font-family:inherit;background:var(--bg);color:var(--text);outline:none;transition:border-color .2s}
+.input-row input:focus{border-color:var(--green);background:#fff}
+.btn-join{padding:11px 22px;background:var(--green);color:#fff;border:none;border-radius:8px;
+  font-size:15px;font-weight:700;cursor:pointer;white-space:nowrap;transition:background .2s;font-family:inherit}
+.btn-join:hover{background:#155c2d}
+.ex-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:10px}
+.name-pills{display:flex;flex-wrap:wrap;gap:8px}
+.name-pill{padding:7px 15px;border:1px solid var(--border);border-radius:20px;background:var(--bg);
+  font-size:13px;cursor:pointer;color:var(--text);transition:all .15s;font-family:inherit}
+.name-pill:hover{background:var(--green-l);border-color:var(--green);color:var(--green)}
+
+/* MAIN */
+#main-app{display:none}
+.user-bar{background:var(--npl);padding:12px 1rem;display:flex;align-items:center;gap:12px}
+.av{width:40px;height:40px;border-radius:50%;background:var(--green);color:#fff;
+  display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;flex-shrink:0}
+.user-info{flex:1}
+.user-info .un{color:#fff;font-size:15px;font-weight:600}
+.user-info .us{color:rgba(255,255,255,.4);font-size:12px;margin-top:1px}
+.btn-sw{font-size:12px;color:rgba(255,255,255,.5);background:none;border:1px solid rgba(255,255,255,.2);
+  border-radius:6px;padding:5px 10px;cursor:pointer;transition:all .15s;font-family:inherit}
+.btn-sw:hover{color:#fff;border-color:rgba(255,255,255,.5)}
+
+/* TABS */
+.tab-bar{background:var(--surface);border-bottom:1px solid var(--border);display:flex;
+  position:sticky;top:0;z-index:20;box-shadow:0 1px 4px rgba(0,0,0,.06);overflow-x:auto}
+.tab{flex:1;padding:13px 6px;font-size:12px;font-weight:600;border:none;background:none;
+  cursor:pointer;color:var(--muted);border-bottom:3px solid transparent;
+  transition:all .15s;font-family:inherit;white-space:nowrap;min-width:60px}
+.tab.active{color:var(--green);border-bottom-color:var(--green)}
+.tab:hover:not(.active){color:var(--text)}
+.tab-content{display:none;padding:1.25rem 0 4rem}
+.tab-content.active{display:block}
+
+/* DATE LABEL */
+.date-lbl{display:flex;align-items:center;gap:10px;margin:1.5rem 0 10px}
+.date-lbl:first-child{margin-top:0}
+.date-lbl-text{font-size:13px;font-weight:700;color:var(--text);white-space:nowrap}
+.date-lbl-line{flex:1;height:1px;background:var(--border)}
+.date-lbl-today{background:var(--green);color:#fff;font-size:10px;font-weight:700;padding:2px 7px;border-radius:10px;text-transform:uppercase;letter-spacing:.06em}
+.sec-lbl{font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--muted);padding:5px 0 8px;border-bottom:1px solid var(--border);margin-bottom:10px;margin-top:1.5rem}
+.sec-lbl:first-child{margin-top:0}
+
+/* FIXTURE CARD */
+.fx-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);
+  padding:1rem 1.25rem;margin-bottom:10px;transition:box-shadow .2s}
+.fx-card:hover{box-shadow:var(--shadow)}
+.fx-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;gap:8px;flex-wrap:wrap}
+.fx-meta{font-size:11px;color:var(--muted);display:flex;flex-direction:column;gap:1px}
+.fx-meta .time{font-weight:700;color:#444;font-size:12px}
+.st-pill{font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px;white-space:nowrap}
+.st-open{background:var(--green-l);color:var(--green)}
+.st-live{background:#FFF3CD;color:#856404;animation:pulse 1.5s infinite}
+.st-done{background:#F0F4F8;color:var(--muted)}
+.st-soon{background:var(--gold-l);color:#856404}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.6}}
+.teams-row{display:flex;align-items:center;gap:8px;margin-bottom:10px}
+.team{font-size:16px;font-weight:700;flex:1}
+.team.away{text-align:right}
+.vs-b{font-size:11px;font-weight:800;color:var(--muted);background:var(--bg);padding:3px 8px;border-radius:6px}
+
+/* PREDICT BTNS */
+.pred-row{display:flex;gap:6px;margin-bottom:10px}
+.btn-p{flex:1;padding:9px 4px;border:1px solid var(--border);border-radius:8px;background:var(--bg);
+  font-size:12px;font-weight:600;cursor:pointer;color:var(--text);transition:all .15s;font-family:inherit;text-align:center;line-height:1.3}
+.btn-p:hover:not(:disabled){transform:translateY(-1px);box-shadow:0 3px 8px rgba(0,0,0,.1)}
+.btn-p.win{background:var(--green-l);color:var(--green);border-color:#a8d9b8}
+.btn-p.loss{background:var(--red-l);color:var(--red);border-color:#e8a8a8}
+.btn-p.sel.win{background:var(--green);color:#fff;border-color:var(--green)}
+.btn-p.sel.loss{background:var(--red);color:#fff;border-color:var(--red)}
+.btn-p:disabled{opacity:0.45;cursor:not-allowed;transform:none}
+.edit-notice{font-size:11px;padding:4px 10px;border-radius:6px;margin-bottom:6px;display:inline-block}
+.edit-open{background:#FFF8DC;color:#856404}
+.edit-closed{background:#F0F4F8;color:var(--muted)}
+
+/* COMMUNITY BAR */
+.comm{margin-top:6px}
+.comm-hdr{display:flex;justify-content:space-between;font-size:11px;color:var(--muted);margin-bottom:4px}
+.pct-bar{height:5px;background:var(--bg);border-radius:3px;overflow:hidden;display:flex}
+.ps{height:100%;transition:width .4s ease}
+.pg{background:var(--green-m)}.pr{background:#E57368}
+.pct-lbl{display:flex;justify-content:space-between;font-size:10px;color:var(--muted);margin-top:3px}
+
+/* RESULT BADGE */
+.res-badge{display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:700;padding:4px 10px;border-radius:20px}
+.res-badge.win{background:var(--green-l);color:var(--green)}
+.res-badge.loss{background:var(--red-l);color:var(--red)}
+.res-badge.correct{background:var(--green);color:#fff}
+.res-badge.wrong{background:var(--red);color:#fff}
+
+/* STATS */
+.stat-grid{display:flex;gap:10px;margin-bottom:1.5rem}
+.stat-box{flex:1;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px;text-align:center}
+.stat-box .num{font-size:26px;font-weight:700;color:var(--green)}
+.stat-box .lbl{font-size:11px;color:var(--muted);margin-top:2px}
+.pick-row{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--border)}
+.pick-row:last-child{border-bottom:none}
+.pick-match{flex:1}
+.pm-name{font-size:14px;font-weight:600}
+.pm-sub{font-size:11px;color:var(--muted);margin-top:2px}
+.mpc{display:inline-flex;align-items:center;gap:4px;font-size:12px;font-weight:700;padding:4px 10px;border-radius:20px}
+.mpc.win{background:var(--green-l);color:var(--green)}
+.mpc.loss{background:var(--red-l);color:var(--red)}
+
+/* LEADERBOARD */
+.lb-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;box-shadow:var(--shadow)}
+.lb-note{padding:10px 1.25rem;font-size:12px;color:var(--muted);background:var(--bg);border-bottom:1px solid var(--border)}
+.lb-row{display:flex;align-items:center;gap:12px;padding:12px 1.25rem;border-bottom:1px solid var(--border);transition:background .15s}
+.lb-row:last-child{border-bottom:none}
+.lb-row.me{background:var(--green-l)}
+.lb-row.t1{background:#FFFBEA}
+.lb-rank{font-size:14px;font-weight:700;width:30px}
+.lb-name{flex:1;font-size:14px;font-weight:500}
+.lb-pts{font-size:18px;font-weight:700;color:var(--green)}
+.lb-picks{font-size:11px;color:var(--muted)}
+
+/* ALL PREDS TABLE */
+.preds-table{width:100%;border-collapse:collapse;font-size:13px}
+.preds-table th{background:var(--npl);color:rgba(255,255,255,.8);padding:10px 12px;text-align:left;font-size:11px;letter-spacing:.06em;text-transform:uppercase;font-weight:600}
+.preds-table td{padding:9px 12px;border-bottom:1px solid var(--border);vertical-align:middle}
+.preds-table tr:last-child td{border-bottom:none}
+.preds-table tr:nth-child(even) td{background:#FAFBFC}
+.badge-win{background:var(--green-l);color:var(--green);padding:2px 8px;border-radius:12px;font-size:11px;font-weight:700}
+.badge-loss{background:var(--red-l);color:var(--red);padding:2px 8px;border-radius:12px;font-size:11px;font-weight:700}
+
+/* VOTER DB */
+.vdb-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);margin-bottom:12px;overflow:hidden;box-shadow:var(--shadow)}
+.vdb-hdr{background:var(--npl);color:#fff;padding:10px 14px;display:flex;justify-content:space-between;align-items:center}
+.vdb-hdr .match-name{font-size:13px;font-weight:700}
+.vdb-hdr .match-time{font-size:11px;color:rgba(255,255,255,.5)}
+.vdb-row{display:flex;align-items:center;gap:10px;padding:9px 14px;border-bottom:1px solid var(--border);font-size:13px;flex-wrap:wrap}
+.vdb-row:last-child{border-bottom:none}
+.vdb-name{flex:1;font-weight:500;min-width:80px}
+.vdb-time{font-size:10px;color:var(--muted)}
+.vdb-device{font-size:10px;color:var(--muted);background:var(--bg);padding:2px 7px;border-radius:10px}
+
+/* FILTER */
+.filter-bar{display:flex;gap:6px;margin-bottom:1rem;flex-wrap:wrap}
+.filter-btn{padding:5px 12px;border:1px solid var(--border);border-radius:20px;background:var(--surface);
+  font-size:12px;cursor:pointer;color:var(--muted);transition:all .15s;font-family:inherit}
+.filter-btn.active{background:var(--npl);color:#fff;border-color:var(--npl)}
+.filter-btn:hover:not(.active){background:var(--bg)}
+
+/* COUNTDOWN */
+.countdown{font-size:11px;color:#856404;font-weight:700;background:var(--gold-l);
+  padding:3px 9px;border-radius:20px;display:inline-block;margin-bottom:8px}
+
+/* ADMIN */
+.admin-header{background:var(--npl);color:#fff;padding:14px 16px;border-radius:var(--r);margin-bottom:1.25rem;display:flex;align-items:center;gap:10px}
+.admin-header .shield{font-size:24px}
+.admin-header h3{font-size:16px;font-weight:700;margin:0}
+.admin-header p{font-size:12px;color:rgba(255,255,255,.5);margin:2px 0 0}
+.admin-user-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:12px 16px;margin-bottom:10px;display:flex;align-items:center;gap:12px}
+.admin-user-card .av-sm{width:36px;height:36px;border-radius:50%;background:#90A4AE;color:#fff;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;flex-shrink:0}
+.admin-user-card .info{flex:1}
+.admin-user-card .info .uname{font-size:14px;font-weight:600}
+.admin-user-card .info .umeta{font-size:11px;color:var(--muted);margin-top:2px}
+.admin-actions{display:flex;gap:6px}
+.btn-edit-user{padding:6px 12px;background:var(--blue-l);color:var(--blue);border:1px solid #a8c3e8;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit}
+.btn-del-user{padding:6px 12px;background:var(--red-l);color:var(--red);border:1px solid #e8a8a8;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit}
+.admin-modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:500;display:flex;align-items:center;justify-content:center;padding:1rem}
+.admin-modal{background:#fff;border-radius:var(--r);padding:1.5rem;width:100%;max-width:380px;box-shadow:0 8px 32px rgba(0,0,0,.2)}
+.admin-modal h4{font-size:16px;font-weight:700;margin-bottom:6px}
+.admin-modal p{font-size:13px;color:var(--muted);margin-bottom:1rem;line-height:1.5}
+.admin-modal input{width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:8px;font-size:14px;font-family:inherit;margin-bottom:1rem;outline:none}
+.admin-modal input:focus{border-color:var(--green)}
+.admin-modal-btns{display:flex;gap:8px;justify-content:flex-end}
+.btn-cancel{padding:9px 18px;background:var(--bg);border:1px solid var(--border);border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit}
+.btn-confirm-edit{padding:9px 18px;background:var(--blue);color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit}
+.btn-confirm-del{padding:9px 18px;background:var(--red);color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit}
+
+/* MISC */
+.empty{text-align:center;padding:3rem 1rem;color:var(--muted);font-size:14px}
+.empty .big{font-size:2.5rem;margin-bottom:10px}
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(12px);
+  background:#1A202C;color:#fff;padding:10px 20px;border-radius:8px;font-size:13px;font-weight:600;
+  opacity:0;transition:all .3s;pointer-events:none;z-index:999;white-space:nowrap;box-shadow:0 4px 20px rgba(0,0,0,.25)}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+@media(max-width:500px){
+  .hero h1{font-size:2.8rem}
+  .btn-p{font-size:11px;padding:8px 3px}
+  .team{font-size:14px}
+  .stat-grid{flex-wrap:wrap}
+  .stat-box{min-width:calc(50% - 5px)}
+}
+</style>
+</head>
+<body>
+
+<!-- LOADING -->
+<div id="loading-screen">
+  <div class="spin"></div>
+  <p>Connecting to database…</p>
+</div>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-flag">🏏🏆🇳🇵</div>
+  <div class="hero-badge">Nepal Premier League · Season 3</div>
+  <h1>NPL <em>S3</em><br>Predictor</h1>
+  <p class="hero-sub">Oct 26 – Nov 21, 2026 · All times in Nepal Standard Time (NST)</p>
+  <div class="sync-status"><span class="sync-dot" id="sync-dot"></span><span id="sync-label">Connecting…</span></div>
+</div>
+
+<!-- WELCOME -->
+<div id="welcome-screen">
+  <div class="wrap" style="padding-top:1.5rem;padding-bottom:3rem">
+    <div class="join-card">
+      <h2>Join the NPL prediction game 🏏</h2>
+      <p>Enter your name to start predicting match winners. Predictions lock <strong>1 hour before</strong> each match. One prediction per device per match. Live sync across all devices.</p>
+      <div class="input-row">
+        <input type="text" id="name-input" placeholder="Your name…" maxlength="30" onkeydown="if(event.key==='Enter')joinApp()"/>
+        <button class="btn-join" onclick="joinApp()">Join →</button>
+      </div>
+      <div id="ex-wrap" style="display:none">
+        <div class="ex-label">Or pick your name</div>
+        <div class="name-pills" id="name-pills"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MAIN APP -->
+<div id="main-app">
+  <div class="user-bar">
+    <div class="av" id="uav">?</div>
+    <div class="user-info">
+      <div class="un" id="uname">—</div>
+      <div class="us" id="ustats">0 predictions · 0 pts</div>
+    </div>
+    <button class="btn-sw" onclick="switchUser()">Switch</button>
+  </div>
+  <div class="tab-bar">
+    <button class="tab active" onclick="switchTab('fixtures',this)">Fixtures</button>
+    <button class="tab" onclick="switchTab('mypicks',this)">My Picks</button>
+    <button class="tab" onclick="switchTab('leaderboard',this)">Leaderboard</button>
+    <button class="tab" onclick="switchTab('allpreds',this)">All Picks</button>
+    <button class="tab" onclick="switchTab('voterdb',this)">Voter DB</button>
+    <button class="tab" id="admin-tab-btn" style="color:#C0392B" onclick="adminTabClick(this)">⚙️ Admin</button>
+  </div>
+  <div class="wrap">
+    <div id="tab-fixtures" class="tab-content active"></div>
+    <div id="tab-mypicks" class="tab-content"></div>
+    <div id="tab-leaderboard" class="tab-content"></div>
+    <div id="tab-allpreds" class="tab-content"></div>
+    <div id="tab-voterdb" class="tab-content"></div>
+    <div id="tab-admin" class="tab-content"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getDatabase, ref, set, get, onValue, update }
+  from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+
+// ── FIREBASE (same project as WC2026, separate npl/ namespace) ────
+const firebaseConfig = {
+  apiKey: "AIzaSyC0kIQKvmqbfCVUyDoMFpjOfOCZX9RLxYA",
+  authDomain: "wc2026predictor-25a67.firebaseapp.com",
+  projectId: "wc2026predictor-25a67",
+  storageBucket: "wc2026predictor-25a67.firebasestorage.app",
+  messagingSenderId: "524592774619",
+  appId: "1:524592774619:web:95caf9c0078788ecec7bfe",
+  databaseURL: "https://wc2026predictor-25a67-default-rtdb.firebaseio.com/"
+};
+const app = initializeApp(firebaseConfig);
+const db  = getDatabase(app);
+
+// All NPL data lives under "npl/" in Firebase — fully separate from WC2026
+const DB = 'npl';
+
+// ── CONSTANTS ─────────────────────────────────────────
+const HOUR_MS  = 60 * 60 * 1000;
+const LOCK_MS  = 1 * HOUR_MS;  // lock 1 hour before kickoff
+const ADMIN_PW = '2078';
+const NST_OFFSET = (5 * 60 + 45) * 60 * 1000; // UTC+5:45
+
+// ── NPL FIXTURES (all NST times, converted to UTC for epoch) ──
+// NST = UTC+5:45 → subtract 5h45m for UTC
+// 12:30 PM NST = 06:45 UTC | 5:00 PM NST = 11:15 UTC
+const RAW = [
+  // ── GROUP STAGE ───────────────────────────────────────
+  {id:'m01',rnd:'Group Stage',home:'Lumbini Lions',     away:'Sudurpaschim Royals', gdate:'2026-10-26',utc:[6,45], venue:'TU Ground, Kirtipur'},
+  {id:'m02',rnd:'Group Stage',home:'Biratnagar Kings',  away:'Chitwan Rhinos',      gdate:'2026-10-27',utc:[6,45], venue:'TU Ground, Kirtipur'},
+  {id:'m03',rnd:'Group Stage',home:'Karnali Yaks',      away:'Janakpur Bolts',      gdate:'2026-10-27',utc:[11,15],venue:'TU Ground, Kirtipur'},
+  {id:'m04',rnd:'Group Stage',home:'Pokhara Avengers',  away:'Kathmandu Gorkhas',   gdate:'2026-10-28',utc:[11,15],venue:'TU Ground, Kirtipur'},
+  {id:'m05',rnd:'Group Stage',home:'Lumbini Lions',     away:'Biratnagar Kings',    gdate:'2026-10-29',utc:[6,45], venue:'TU Ground, Kirtipur'},
+  {id:'m06',rnd:'Group Stage',home:'Sudurpaschim Royals',away:'Janakpur Bolts',     gdate:'2026-10-29',utc:[11,15],venue:'TU Ground, Kirtipur'},
+  {id:'m07',rnd:'Group Stage',home:'Chitwan Rhinos',    away:'Pokhara Avengers',    gdate:'2026-10-31',utc:[11,15],venue:'TU Ground, Kirtipur'},
+  {id:'m08',rnd:'Group Stage',home:'Kathmandu Gorkhas', away:'Karnali Yaks',        gdate:'2026-11-01',utc:[6,45], venue:'TU Ground, Kirtipur'},
+  {id:'m09',rnd:'Group Stage',home:'Lumbini Lions',     away:'Chitwan Rhinos',      gdate:'2026-11-01',utc:[11,15],venue:'TU Ground, Kirtipur'},
+  {id:'m10',rnd:'Group Stage',home:'Biratnagar Kings',  away:'Sudurpaschim Royals', gdate:'2026-11-02',utc:[6,45], venue:'TU Ground, Kirtipur'},
+  {id:'m11',rnd:'Group Stage',home:'Janakpur Bolts',    away:'Pokhara Avengers',    gdate:'2026-11-02',utc:[11,15],venue:'TU Ground, Kirtipur'},
+  {id:'m12',rnd:'Group Stage',home:'Kathmandu Gorkhas', away:'Lumbini Lions',       gdate:'2026-11-03',utc:[11,15],venue:'TU Ground, Kirtipur'},
+  {id:'m13',rnd:'Group Stage',home:'Karnali Yaks',      away:'Biratnagar Kings',    gdate:'2026-11-05',utc:[11,15],venue:'TU Ground, Kirtipur'},
+  {id:'m14',rnd:'Group Stage',home:'Sudurpaschim Royals',away:'Chitwan Rhinos',     gdate:'2026-11-06',utc:[6,45], venue:'TU Ground, Kirtipur'},
+  {id:'m15',rnd:'Group Stage',home:'Janakpur Bolts',    away:'Kathmandu Gorkhas',   gdate:'2026-11-06',utc:[11,15],venue:'TU Ground, Kirtipur'},
+  {id:'m16',rnd:'Group Stage',home:'Pokhara Avengers',  away:'Lumbini Lions',       gdate:'2026-11-07',utc:[11,15],venue:'TU Ground, Kirtipur'},
+  {id:'m17',rnd:'Group Stage',home:'Chitwan Rhinos',    away:'Karnali Yaks',        gdate:'2026-11-09',utc:[6,45], venue:'TU Ground, Kirtipur'},
+  {id:'m18',rnd:'Group Stage',home:'Sudurpaschim Royals',away:'Pokhara Avengers',   gdate:'2026-11-09',utc:[11,15],venue:'TU Ground, Kirtipur'},
+  {id:'m19',rnd:'Group Stage',home:'Biratnagar Kings',  away:'Janakpur Bolts',      gdate:'2026-11-10',utc:[11,15],venue:'TU Ground, Kirtipur'},
+  {id:'m20',rnd:'Group Stage',home:'Karnali Yaks',      away:'Lumbini Lions',       gdate:'2026-11-12',utc:[11,15],venue:'TU Ground, Kirtipur'},
+  {id:'m21',rnd:'Group Stage',home:'Chitwan Rhinos',    away:'Janakpur Bolts',      gdate:'2026-11-13',utc:[6,45], venue:'TU Ground, Kirtipur'},
+  {id:'m22',rnd:'Group Stage',home:'Pokhara Avengers',  away:'Biratnagar Kings',    gdate:'2026-11-13',utc:[11,15],venue:'TU Ground, Kirtipur'},
+  {id:'m23',rnd:'Group Stage',home:'Kathmandu Gorkhas', away:'Sudurpaschim Royals', gdate:'2026-11-14',utc:[11,15],venue:'TU Ground, Kirtipur'},
+  {id:'m24',rnd:'Group Stage',home:'Janakpur Bolts',    away:'Lumbini Lions',       gdate:'2026-11-15',utc:[6,45], venue:'TU Ground, Kirtipur'},
+  {id:'m25',rnd:'Group Stage',home:'Pokhara Avengers',  away:'Karnali Yaks',        gdate:'2026-11-15',utc:[11,15],venue:'TU Ground, Kirtipur'},
+  // ── PLAYOFFS ──────────────────────────────────────────
+  {id:'pl1',rnd:'Qualifier 1', home:'1st Place',        away:'2nd Place',           gdate:'2026-11-17',utc:[11,15],venue:'TU Ground, Kirtipur'},
+  {id:'pl2',rnd:'Eliminator',  home:'3rd Place',        away:'4th Place',           gdate:'2026-11-18',utc:[11,15],venue:'TU Ground, Kirtipur'},
+  {id:'pl3',rnd:'Qualifier 2', home:'Loser Q1',         away:'Winner Elim',         gdate:'2026-11-19',utc:[11,15],venue:'TU Ground, Kirtipur'},
+  {id:'pl4',rnd:'Grand Finale 🏆',home:'Winner Q1',    away:'Winner Q2',           gdate:'2026-11-21',utc:[11,15],venue:'TU Ground, Kirtipur'},
+];
+
+// ── HELPERS ──────────────────────────────────────────
+const $ = id => document.getElementById(id);
+
+function kickoffEpoch(dateStr, h, m){
+  const [y,mo,d] = dateStr.split('-').map(Number);
+  return Date.UTC(y, mo-1, d, h, m);
+}
+
+function epochToNST(epoch){
+  const nst = new Date(epoch + NST_OFFSET);
+  const days = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const day = nst.getUTCDay(), d = nst.getUTCDate(), mo = nst.getUTCMonth();
+  let h = nst.getUTCHours(), m = nst.getUTCMinutes();
+  const ampm = h >= 12 ? 'PM' : 'AM';
+  h = h % 12 || 12;
+  return `${days[day]}, ${d} ${months[mo]} · ${h}:${String(m).padStart(2,'0')} ${ampm} NST`;
+}
+
+function epochToNSTDate(epoch){
+  const nst = new Date(epoch + NST_OFFSET);
+  return `${nst.getUTCFullYear()}-${String(nst.getUTCMonth()+1).padStart(2,'0')}-${String(nst.getUTCDate()).padStart(2,'0')}`;
+}
+
+function epochToNSTDateLabel(epoch){
+  const nst = new Date(epoch + NST_OFFSET);
+  const days = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+  const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  return `${days[nst.getUTCDay()]}, ${nst.getUTCDate()} ${months[nst.getUTCMonth()]}`;
+}
+
+// Build FIXTURES array
+const FIXTURES = RAW.map(f => {
+  const epoch = kickoffEpoch(f.gdate, f.utc[0], f.utc[1]);
+  return {
+    ...f,
+    kickoffEpoch: epoch,
+    displayTime: epochToNST(epoch),
+    nstDate: epochToNSTDate(epoch),
+    nstDateLabel: epochToNSTDateLabel(epoch),
+  };
+});
+
+function matchStatus(f){
+  const now = Date.now();
+  const ko = f.kickoffEpoch;
+  if(now >= ko + 3.5*HOUR_MS) return 'done';
+  if(now >= ko) return 'live';
+  if(now >= ko - LOCK_MS) return 'soon';
+  return 'open';
+}
+
+function canPredict(f){ return matchStatus(f) === 'open'; }
+function isWithinEditWindow(pred){
+  return pred && (Date.now() - (pred.votedAt||0)) < HOUR_MS;
+}
+function msUntilLock(f){ return Math.max(0, LOCK_MS - (f.kickoffEpoch - Date.now())); }
+function fmtMs(ms){ const s=Math.floor(ms/1000)%60,m=Math.floor(ms/60000); return m>0?`${m}m ${s}s`:`${s}s`; }
+
+function getDeviceId(){
+  let id = localStorage.getItem('npl_device_id');
+  if(!id){ id='d'+Math.random().toString(36).slice(2,10); localStorage.setItem('npl_device_id',id); }
+  return id;
+}
+
+// ── STATE ─────────────────────────────────────────────
+let currentUser = localStorage.getItem('npl_user') || '';
+let activeTab = 'fixtures';
+let adminUnlocked = false;
+let state = { users:{}, predictions:{}, results:{}, scores:{} };
+
+function setSyncStatus(online){
+  const dot = $('sync-dot'), lbl = $('sync-label');
+  if(!dot||!lbl) return;
+  if(online){ dot.classList.remove('offline'); lbl.textContent='Live sync'; }
+  else{ dot.classList.add('offline'); lbl.textContent='Offline'; }
+}
+
+function toast(msg, dur=2800){
+  const el = $('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  setTimeout(()=>el.classList.remove('show'), dur);
+}
+
+// ── SCORING ───────────────────────────────────────────
+// win = 3pts, correct pick = 3pts (no draw in cricket)
+function calcScore(preds, results){
+  let pts=0, correct=0, total=0;
+  FIXTURES.forEach(f=>{
+    const p = preds?.[f.id];
+    const r = results?.[f.id];
+    if(!p) return;
+    total++;
+    if(!r) return;
+    if(p.pick === r){ pts+=3; correct++; }
+  });
+  return {pts, correct, total};
+}
+
+async function recalcAndSaveAllScores(){
+  const updates = {};
+  Object.keys(state.users).forEach(u=>{
+    const {pts,correct,total} = calcScore(state.predictions[u], state.results);
+    updates[`${DB}/scores/${u}`] = {pts,correct,total};
+  });
+  await update(ref(db), updates);
+}
+
+// ── FIREBASE LISTENERS ────────────────────────────────
+function startListeners(){
+  onValue(ref(db, DB), snap => {
+    const d = snap.val() || {};
+    state.users       = d.users       || {};
+    state.predictions = d.predictions || {};
+    state.results     = d.results     || {};
+    state.scores      = d.scores      || {};
+
+    // Refresh name pills
+    const names = Object.keys(state.users);
+    const exWrap = $('ex-wrap');
+    if(exWrap){
+      if(names.length){
+        exWrap.style.display='block';
+        $('name-pills').innerHTML = names.map(n=>
+          `<button class="name-pill" onclick="document.getElementById('name-input').value='${n}';joinApp()">${n}</button>`
+        ).join('');
+      } else { exWrap.style.display='none'; }
+    }
+
+    if(currentUser){
+      renderUserBar();
+      renderActiveTab();
+    }
+  });
+}
+
+// ── JOIN / SWITCH ─────────────────────────────────────
+window.joinApp = async function(){
+  const name = $('name-input').value.trim();
+  if(!name){ toast('Enter your name first'); return; }
+  currentUser = name;
+  localStorage.setItem('npl_user', name);
+  if(!state.users[name]){
+    await set(ref(db,`${DB}/users/${name}`), {joinedAt: Date.now(), device: getDeviceId()});
+  }
+  $('welcome-screen').style.display='none';
+  $('main-app').style.display='block';
+  renderUserBar();
+  renderActiveTab();
+};
+
+window.switchUser = function(){
+  currentUser='';
+  localStorage.removeItem('npl_user');
+  $('main-app').style.display='none';
+  $('welcome-screen').style.display='block';
+  $('name-input').value='';
+};
+
+function renderUserBar(){
+  if(!currentUser) return;
+  $('uav').textContent = currentUser[0].toUpperCase();
+  $('uname').textContent = currentUser;
+  const sc = state.scores[currentUser] || {pts:0,correct:0,total:0};
+  $('ustats').textContent = `${sc.total||0} predictions · ${sc.pts||0} pts`;
+}
+
+// ── TABS ─────────────────────────────────────────────
+window.switchTab = function(tab, btn){
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.tab-content').forEach(t=>t.classList.remove('active'));
+  btn.classList.add('active');
+  $(`tab-${tab}`).classList.add('active');
+  activeTab = tab;
+  renderActiveTab();
+};
+
+function renderActiveTab(){
+  if(activeTab==='fixtures')    renderFixtures();
+  if(activeTab==='mypicks')     renderMyPicks();
+  if(activeTab==='leaderboard') renderLeaderboard();
+  if(activeTab==='allpreds')    renderAllPreds();
+  if(activeTab==='voterdb')     renderVoterDB();
+  if(activeTab==='admin')       renderAdmin();
+}
+
+window.adminTabClick = function(btn){
+  if(!adminUnlocked){
+    const pw = prompt('Admin password:');
+    if(pw !== ADMIN_PW){ toast('❌ Wrong password'); return; }
+    adminUnlocked = true;
+    toast('🔓 Admin unlocked');
+  }
+  switchTab('admin', btn);
+};
+
+// ── FIXTURES TAB ──────────────────────────────────────
+let fxFilter = 'all';
+window.setFxFilter = function(f, btn){
+  fxFilter=f;
+  document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  renderFixtures();
+};
+
+function renderFixtures(){
+  const el = $('tab-fixtures');
+  const now = Date.now();
+  let list = FIXTURES;
+  if(fxFilter==='open')  list = FIXTURES.filter(f=>matchStatus(f)==='open');
+  if(fxFilter==='live')  list = FIXTURES.filter(f=>matchStatus(f)==='live'||matchStatus(f)==='soon');
+  if(fxFilter==='done')  list = FIXTURES.filter(f=>matchStatus(f)==='done');
+
+  let html = `<div class="filter-bar">
+    <button class="filter-btn ${fxFilter==='all'?'active':''}" onclick="setFxFilter('all',this)">All (${FIXTURES.length})</button>
+    <button class="filter-btn ${fxFilter==='open'?'active':''}" onclick="setFxFilter('open',this)">Open</button>
+    <button class="filter-btn ${fxFilter==='live'?'active':''}" onclick="setFxFilter('live',this)">Live/Soon</button>
+    <button class="filter-btn ${fxFilter==='done'?'active':''}" onclick="setFxFilter('done',this)">Done</button>
+  </div>`;
+
+  if(!list.length){ html+=`<div class="empty"><div class="big">🏏</div>No matches in this filter</div>`; el.innerHTML=html; return; }
+
+  let lastDate='';
+  list.forEach(f=>{
+    const st    = matchStatus(f);
+    const myPred= state.predictions[currentUser]?.[f.id];
+    const result= state.results?.[f.id];
+    const allPreds = Object.values(state.predictions).map(up=>up?.[f.id]).filter(Boolean);
+    const winVotes  = allPreds.filter(p=>p.pick==='win').length;
+    const lossVotes = allPreds.filter(p=>p.pick==='loss').length;
+    const total     = allPreds.length;
+
+    // Date separator
+    if(f.nstDate !== lastDate){
+      lastDate = f.nstDate;
+      const isToday = epochToNSTDate(now) === f.nstDate;
+      html+=`<div class="date-lbl">
+        <span class="date-lbl-text">${f.nstDateLabel}</span>
+        ${isToday?'<span class="date-lbl-today">Today</span>':''}
+        <span class="date-lbl-line"></span>
+      </div>`;
+    }
+
+    // Round label
+    const roundColors = {'Group Stage':'#1a7a3c','Qualifier 1':'#1A56A4','Eliminator':'#C0392B','Qualifier 2':'#7B2D8B','Grand Finale 🏆':'#D4AF37'};
+    const rc = roundColors[f.rnd]||'#444';
+
+    let stPill='', stLabel='';
+    if(st==='open'){  stPill='st-open'; stLabel='🟢 Open'; }
+    if(st==='soon'){  stPill='st-soon'; stLabel='⏳ Closing Soon'; }
+    if(st==='live'){  stPill='st-live'; stLabel='🔴 LIVE'; }
+    if(st==='done'){  stPill='st-done'; stLabel='✓ Done'; }
+
+    html += `<div class="fx-card">
+      <div class="fx-top">
+        <div class="fx-meta">
+          <span style="font-size:11px;font-weight:700;color:${rc}">${f.rnd}</span>
+          <span class="time">⏰ ${f.displayTime}</span>
+          <span>📍 ${f.venue}</span>
+        </div>
+        <span class="st-pill ${stPill}">${stLabel}</span>
+      </div>
+      <div class="teams-row">
+        <div class="team">${f.home}</div>
+        <div class="vs-b">VS</div>
+        <div class="team away">${f.away}</div>
+      </div>`;
+
+    // Result display
+    if(result){
+      const winner = result==='win'?f.home:f.away;
+      const myCorrect = myPred && myPred.pick===result;
+      html+=`<div style="margin-bottom:8px">
+        <span class="res-badge ${result}">🏏 ${winner} won</span>
+        ${myPred?`<span class="res-badge ${myCorrect?'correct':'wrong'}" style="margin-left:6px">${myCorrect?'✅ +3 pts':'❌ Wrong'}</span>`:''}
+      </div>`;
+    }
+
+    // Prediction buttons
+    if(st==='open' || st==='soon'){
+      const canEdit = myPred && isWithinEditWindow(myPred);
+      const locked  = !canPredict(f);
+      if(myPred && !canEdit){
+        html+=`<span class="edit-notice edit-closed">🔒 Pick locked: ${myPred.pick==='win'?f.home:f.away}</span>`;
+      }
+      if(st==='soon' && !myPred){
+        const msLeft = f.kickoffEpoch - LOCK_MS - now;
+        if(msLeft>0) html+=`<div class="countdown" id="cd-${f.id}">⏱ Locks in ${fmtMs(LOCK_MS-(f.kickoffEpoch-now))}</div>`;
+        else html+=`<div class="countdown">🔒 Locked</div>`;
+      }
+      if(!locked || canEdit){
+        html+=`<div class="pred-row">
+          <button class="btn-p win ${myPred?.pick==='win'?'sel':''}"
+            onclick="predict('${f.id}','win')" ${locked&&!canEdit?'disabled':''}>
+            🏏 ${f.home}<br>wins
+          </button>
+          <button class="btn-p loss ${myPred?.pick==='loss'?'sel':''}"
+            onclick="predict('${f.id}','loss')" ${locked&&!canEdit?'disabled':''}>
+            🏏 ${f.away}<br>wins
+          </button>
+        </div>`;
+        if(canEdit) html+=`<span class="edit-notice edit-open">✏️ You can change your pick for a short time</span>`;
+      }
+    } else if(st==='done'||st==='live'){
+      if(myPred){
+        html+=`<div style="margin-bottom:8px"><span class="mpc ${myPred.pick}">
+          ${myPred.pick==='win'?'🏏 '+f.home+' wins':'🏏 '+f.away+' wins'}
+        </span></div>`;
+      } else {
+        html+=`<div style="margin-bottom:8px;font-size:12px;color:var(--muted)">You didn't predict this match</div>`;
+      }
+    }
+
+    // Community bar
+    if(total>0){
+      const wp = Math.round(winVotes/total*100);
+      const lp = 100-wp;
+      html+=`<div class="comm">
+        <div class="comm-hdr"><span>${f.home}</span><span>${total} vote${total!==1?'s':''}</span><span>${f.away}</span></div>
+        <div class="pct-bar"><div class="ps pg" style="width:${wp}%"></div><div class="ps pr" style="width:${lp}%"></div></div>
+        <div class="pct-lbl"><span>${wp}%</span><span>${lp}%</span></div>
+      </div>`;
+    } else {
+      html+=`<div style="font-size:11px;color:var(--muted);margin-top:4px">No predictions yet</div>`;
+    }
+
+    html+=`</div>`; // fx-card
+  });
+
+  el.innerHTML = html;
+}
+
+// ── PREDICT ──────────────────────────────────────────
+window.predict = async function(fid, pick){
+  if(!currentUser){ toast('Join first'); return; }
+  const f = FIXTURES.find(x=>x.id===fid);
+  if(!f){ return; }
+  if(!canPredict(f)){
+    const existing = state.predictions[currentUser]?.[fid];
+    if(!isWithinEditWindow(existing)){ toast('⏰ Prediction locked'); return; }
+  }
+  const device = getDeviceId();
+  const existing = state.predictions[currentUser]?.[fid];
+  const payload = { pick, votedAt: existing?.votedAt||Date.now(), device };
+  await set(ref(db,`${DB}/predictions/${currentUser}/${fid}`), payload);
+  toast(pick==='win'?`✅ Picked: ${f.home} wins`:`✅ Picked: ${f.away} wins`);
+};
+
+// ── MY PICKS ─────────────────────────────────────────
+function renderMyPicks(){
+  const el = $('tab-mypicks');
+  const sc = state.scores[currentUser] || {pts:0,correct:0,total:0};
+  const preds = state.predictions[currentUser] || {};
+  const myFx = FIXTURES.filter(f=>preds[f.id]);
+
+  let html=`<div class="stat-grid">
+    <div class="stat-box"><div class="num">${sc.pts||0}</div><div class="lbl">Points</div></div>
+    <div class="stat-box"><div class="num">${sc.correct||0}</div><div class="lbl">Correct</div></div>
+    <div class="stat-box"><div class="num">${sc.total||0}</div><div class="lbl">Predicted</div></div>
+    <div class="stat-box"><div class="num">${FIXTURES.length - (sc.total||0)}</div><div class="lbl">Remaining</div></div>
+  </div>`;
+
+  if(!myFx.length){ html+=`<div class="empty"><div class="big">🏏</div>No predictions yet. Go to Fixtures to start!</div>`; el.innerHTML=html; return; }
+
+  myFx.forEach(f=>{
+    const p = preds[f.id];
+    const r = state.results[f.id];
+    const correct = r && p.pick===r;
+    html+=`<div class="pick-row">
+      <div class="pick-match">
+        <div class="pm-name">${f.home} vs ${f.away}</div>
+        <div class="pm-sub">${f.displayTime} · ${f.rnd}</div>
+        ${r?`<div style="font-size:11px;margin-top:3px;color:${correct?'var(--green)':'var(--red)'}">
+          ${correct?`✅ Correct +3 pts`:`❌ Wrong — ${r==='win'?f.home:f.away} won`}
+        </div>`:''}
+      </div>
+      <span class="mpc ${p.pick}">${p.pick==='win'?'🏏 '+f.home:'🏏 '+f.away}</span>
+    </div>`;
+  });
+  el.innerHTML = html;
+}
+
+// ── LEADERBOARD ───────────────────────────────────────
+function renderLeaderboard(){
+  const el = $('tab-leaderboard');
+  const users = Object.keys(state.users);
+  if(!users.length){ el.innerHTML=`<div class="empty"><div class="big">🏆</div>No players yet</div>`; return; }
+
+  const sorted = users.map(u=>{
+    const sc = state.scores[u]||{pts:0,correct:0,total:0};
+    return {...sc, name:u};
+  }).sort((a,b)=>b.pts-a.pts||b.correct-a.correct);
+
+  const done = FIXTURES.filter(f=>state.results?.[f.id]).length;
+  let html=`<div class="lb-card">
+    <div class="lb-note">🏏 ${done} results entered · ${FIXTURES.length-done} remaining · 3 pts per correct pick</div>`;
+  sorted.forEach((u,i)=>{
+    const medal = i===0?'🥇':i===1?'🥈':i===2?'🥉':'';
+    const isMe = u.name===currentUser;
+    html+=`<div class="lb-row ${isMe?'me':''} ${i===0?'t1':''}">
+      <div class="lb-rank">${medal||`#${i+1}`}</div>
+      <div class="lb-name">${u.name}${isMe?' <span style="font-size:10px;color:var(--green)">(you)</span>':''}</div>
+      <div>
+        <div class="lb-pts">${u.pts||0} pts</div>
+        <div class="lb-picks">${u.correct||0}/${u.total||0} correct</div>
+      </div>
+    </div>`;
+  });
+  html+=`</div>`;
+  el.innerHTML=html;
+}
+
+// ── ALL PREDICTIONS ───────────────────────────────────
+function renderAllPreds(){
+  const el = $('tab-allpreds');
+  const users = Object.keys(state.users);
+  if(!users.length){ el.innerHTML=`<div class="empty"><div class="big">📊</div>No data yet</div>`; return; }
+
+  const doneFx = FIXTURES.filter(f=>state.results[f.id]);
+  if(!doneFx.length){ el.innerHTML=`<div class="empty"><div class="big">📊</div>No results entered yet</div>`; return; }
+
+  let html=`<div style="overflow-x:auto"><table class="preds-table"><thead><tr>
+    <th>Match</th>${users.map(u=>`<th>${u}</th>`).join('')}</tr></thead><tbody>`;
+  doneFx.forEach(f=>{
+    const r = state.results[f.id];
+    html+=`<tr><td style="font-weight:600;min-width:140px">${f.home}<br><span style="font-size:10px;color:var(--muted)">vs ${f.away}</span></td>`;
+    users.forEach(u=>{
+      const p = state.predictions[u]?.[f.id];
+      if(!p){ html+=`<td style="color:var(--muted)">—</td>`; return; }
+      const correct = p.pick===r;
+      const label = p.pick==='win'?f.home.split(' ')[0]:f.away.split(' ')[0];
+      html+=`<td><span class="badge-${p.pick}" style="${correct?'border:2px solid var(--green)':''}">${label}</span>
+        ${correct?'<span style="font-size:10px;color:var(--green)"> +3</span>':''}</td>`;
+    });
+    html+=`</tr>`;
+  });
+  html+=`</tbody></table></div>`;
+  el.innerHTML=html;
+}
+
+// ── VOTER DB ─────────────────────────────────────────
+function renderVoterDB(){
+  const el = $('tab-voterdb');
+  const voted = FIXTURES.filter(f=>Object.values(state.predictions).some(up=>up?.[f.id]));
+  if(!voted.length){ el.innerHTML=`<div class="empty"><div class="big">🗳️</div>No votes yet</div>`; return; }
+
+  let html='';
+  voted.forEach(f=>{
+    const voters = Object.entries(state.predictions)
+      .filter(([,up])=>up?.[f.id])
+      .map(([name,up])=>({name, ...up[f.id]}));
+    html+=`<div class="vdb-card">
+      <div class="vdb-hdr">
+        <span class="match-name">${f.home} vs ${f.away}</span>
+        <span class="match-time">${f.displayTime}</span>
+      </div>`;
+    voters.forEach(v=>{
+      const label = v.pick==='win'?`🏏 ${f.home} wins`:`🏏 ${f.away} wins`;
+      const t = v.votedAt?new Date(v.votedAt).toLocaleString('en-NP',{timeZone:'Asia/Kathmandu',hour12:true,hour:'numeric',minute:'2-digit',day:'numeric',month:'short'}):'';
+      html+=`<div class="vdb-row">
+        <div class="vdb-name">${v.name}</div>
+        <span class="badge-${v.pick}">${label}</span>
+        <span class="vdb-time">${t}</span>
+      </div>`;
+    });
+    html+=`</div>`;
+  });
+  el.innerHTML=html;
+}
+
+// ── ADMIN ─────────────────────────────────────────────
+function renderAdmin(){
+  if(!adminUnlocked) return;
+  const users = Object.keys(state.users);
+  const el = $('tab-admin');
+
+  let html=`<div class="admin-header"><span class="shield">🛡️</span>
+    <div><h3>Admin Panel – NPL S3</h3><p>${users.length} players · ${FIXTURES.length} fixtures</p></div>
+  </div>`;
+
+  // Results & prediction reset
+  html+=`<div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;margin-bottom:1rem;overflow:hidden">
+    <div style="background:var(--npl);color:#fff;padding:10px 14px;font-size:13px;font-weight:700;display:flex;justify-content:space-between;align-items:center">
+      <span>🏏 Enter Results & Reset Predictions</span>
+      <button onclick="document.getElementById('res-body').style.display=document.getElementById('res-body').style.display==='none'?'block':'none'"
+        style="padding:5px 12px;background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.3);border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit">Toggle</button>
+    </div>
+    <div id="res-body" style="display:none">`;
+
+  FIXTURES.forEach(f=>{
+    const r = state.results[f.id]||null;
+    const voteCount = Object.values(state.predictions).filter(up=>up?.[f.id]).length;
+    html+=`<div style="padding:10px 14px;border-bottom:1px solid var(--border)">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px;flex-wrap:wrap;gap:4px">
+        <div>
+          <div style="font-size:13px;font-weight:700">${f.home} vs ${f.away}</div>
+          <div style="font-size:11px;color:var(--muted)">${f.rnd} · ${f.displayTime}</div>
+        </div>
+        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px">
+          <div style="font-size:12px;font-weight:700;color:${r?'var(--green)':'var(--muted)'}">
+            ${r==='win'?`🏏 ${f.home} Won`:r==='loss'?`🏏 ${f.away} Won`:'⏳ No result'}
+          </div>
+          <div style="font-size:11px;color:${voteCount>0?'#856404':'var(--muted)'};background:${voteCount>0?'var(--gold-l)':'var(--bg)'};padding:2px 8px;border-radius:10px">
+            ${voteCount} vote${voteCount!==1?'s':''}
+          </div>
+        </div>
+      </div>
+      <div style="display:flex;gap:5px;flex-wrap:wrap">
+        <button onclick="setResult('${f.id}','win')"
+          style="flex:1;min-width:80px;padding:7px 4px;border:2px solid ${r==='win'?'var(--green)':'var(--border)'};background:${r==='win'?'var(--green)':'var(--bg)'};color:${r==='win'?'#fff':'var(--text)'};border-radius:7px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit">
+          🏏 ${f.home.split(' ')[0]} Won
+        </button>
+        <button onclick="setResult('${f.id}','loss')"
+          style="flex:1;min-width:80px;padding:7px 4px;border:2px solid ${r==='loss'?'var(--red)':'var(--border)'};background:${r==='loss'?'var(--red)':'var(--bg)'};color:${r==='loss'?'#fff':'var(--text)'};border-radius:7px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit">
+          🏏 ${f.away.split(' ')[0]} Won
+        </button>
+        ${r?`<button onclick="setResult('${f.id}',null)"
+          style="padding:7px 10px;border:1px solid var(--border);background:var(--bg);color:var(--muted);border-radius:7px;font-size:11px;cursor:pointer;font-family:inherit">✖</button>`:''}
+      </div>
+      ${voteCount>0?`<div style="margin-top:8px">
+        <button onclick="confirmResetPredictions('${f.id}')"
+          style="width:100%;padding:7px;border:2px solid var(--red);background:var(--red-l);color:var(--red);border-radius:7px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit">
+          🗑️ Reset All ${voteCount} Prediction${voteCount!==1?'s':''} for this Match
+        </button>
+      </div>`:''}
+    </div>`;
+  });
+  html+=`</div></div>`;
+
+  // User management
+  html+=`<div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;margin-bottom:1rem;overflow:hidden">
+    <div style="background:var(--npl);color:#fff;padding:10px 14px;font-size:13px;font-weight:700">👤 Players (${users.length})</div>`;
+  if(!users.length){
+    html+=`<div style="padding:14px;font-size:13px;color:var(--muted)">No players yet.</div>`;
+  } else {
+    users.forEach(u=>{
+      const sc = state.scores[u]||{pts:0,correct:0,total:0};
+      html+=`<div class="admin-user-card">
+        <div class="av-sm">${u[0].toUpperCase()}</div>
+        <div class="info">
+          <div class="uname">${u}</div>
+          <div class="umeta">${sc.pts||0} pts · ${sc.correct||0}/${sc.total||0} correct</div>
+        </div>
+        <div class="admin-actions">
+          <button class="btn-edit-user" onclick="adminRenameUser('${u}')">✏️</button>
+          <button class="btn-del-user" onclick="adminDeleteUser('${u}')">🗑️</button>
+        </div>
+      </div>`;
+    });
+  }
+  html+=`</div>`;
+
+  el.innerHTML = html;
+}
+
+// ── ADMIN ACTIONS ─────────────────────────────────────
+window.setResult = async function(fid, result){
+  if(!adminUnlocked){ toast('❌ Not authorized'); return; }
+  if(result===null){
+    await set(ref(db,`${DB}/results/${fid}`), null);
+  } else {
+    await set(ref(db,`${DB}/results/${fid}`), result);
+  }
+  await recalcAndSaveAllScores();
+  toast(result?`✅ Result saved`:`✅ Result cleared`);
+  renderAdmin();
+  if(activeTab==='fixtures') renderFixtures();
+  if(activeTab==='leaderboard') renderLeaderboard();
+};
+
+window.confirmResetPredictions = function(fid){
+  if(!adminUnlocked){ toast('❌ Not authorized'); return; }
+  const fx = FIXTURES.find(f=>f.id===fid);
+  if(!fx) return;
+  const voters = Object.keys(state.predictions).filter(u=>state.predictions[u]?.[fid]);
+  if(!voters.length){ toast('No predictions to reset'); return; }
+
+  const bg = document.createElement('div');
+  bg.className='admin-modal-bg'; bg.id='reset-modal';
+  bg.innerHTML=`<div class="admin-modal">
+    <h4>🗑️ Reset Predictions</h4>
+    <p>Delete all <strong>${voters.length} prediction${voters.length!==1?'s':''}</strong> for:<br>
+    <strong>${fx.home} vs ${fx.away}</strong><br>
+    <span style="font-size:11px;color:var(--muted)">${fx.displayTime}</span></p>
+    <p style="margin-bottom:1rem">Voters: <strong>${voters.join(', ')}</strong><br>This cannot be undone.</p>
+    <div class="admin-modal-btns">
+      <button class="btn-cancel" onclick="document.getElementById('reset-modal').remove()">Cancel</button>
+      <button class="btn-confirm-del" onclick="doResetPredictions('${fid}')">Reset All</button>
+    </div>
+  </div>`;
+  document.body.appendChild(bg);
+};
+
+window.doResetPredictions = async function(fid){
+  const fx = FIXTURES.find(f=>f.id===fid);
+  const voters = Object.keys(state.predictions).filter(u=>state.predictions[u]?.[fid]);
+  const updates = {};
+  voters.forEach(u=>{ updates[`${DB}/predictions/${u}/${fid}`]=null; });
+  updates[`${DB}/results/${fid}`]=null;
+  await update(ref(db), updates);
+  document.getElementById('reset-modal')?.remove();
+  toast(`🗑️ Reset ${voters.length} prediction${voters.length!==1?'s':''}`);
+  await recalcAndSaveAllScores();
+  renderAdmin();
+  if(activeTab==='fixtures') renderFixtures();
+  if(activeTab==='leaderboard') renderLeaderboard();
+};
+
+window.adminRenameUser = function(oldName){
+  const bg = document.createElement('div');
+  bg.className='admin-modal-bg'; bg.id='rename-modal';
+  bg.innerHTML=`<div class="admin-modal">
+    <h4>✏️ Rename Player</h4>
+    <p>Current name: <strong>${oldName}</strong></p>
+    <input id="rename-input" type="text" value="${oldName}" maxlength="30" placeholder="New name…"/>
+    <div class="admin-modal-btns">
+      <button class="btn-cancel" onclick="document.getElementById('rename-modal').remove()">Cancel</button>
+      <button class="btn-confirm-edit" onclick="doRenameUser('${oldName}')">Save</button>
+    </div>
+  </div>`;
+  document.body.appendChild(bg);
+};
+
+window.doRenameUser = async function(oldName){
+  const newName = $('rename-input')?.value?.trim();
+  if(!newName||newName===oldName){ toast('Enter a different name'); return; }
+  if(state.users[newName]){ toast('Name already taken'); return; }
+  const updates = {};
+  updates[`${DB}/users/${newName}`]      = state.users[oldName];
+  updates[`${DB}/users/${oldName}`]      = null;
+  updates[`${DB}/predictions/${newName}`]= state.predictions[oldName]||null;
+  updates[`${DB}/predictions/${oldName}`]= null;
+  updates[`${DB}/scores/${newName}`]     = state.scores[oldName]||null;
+  updates[`${DB}/scores/${oldName}`]     = null;
+  await update(ref(db), updates);
+  if(currentUser===oldName){ currentUser=newName; localStorage.setItem('npl_user',newName); }
+  document.getElementById('rename-modal')?.remove();
+  toast(`✅ Renamed to ${newName}`);
+  renderAdmin();
+};
+
+window.adminDeleteUser = function(name){
+  const bg = document.createElement('div');
+  bg.className='admin-modal-bg'; bg.id='del-modal';
+  bg.innerHTML=`<div class="admin-modal">
+    <h4>🗑️ Delete Player</h4>
+    <p>Permanently delete <strong>${name}</strong> and all their predictions?<br>This cannot be undone.</p>
+    <div class="admin-modal-btns">
+      <button class="btn-cancel" onclick="document.getElementById('del-modal').remove()">Cancel</button>
+      <button class="btn-confirm-del" onclick="doDeleteUser('${name}')">Delete</button>
+    </div>
+  </div>`;
+  document.body.appendChild(bg);
+};
+
+window.doDeleteUser = async function(name){
+  const updates = {};
+  updates[`${DB}/users/${name}`]       = null;
+  updates[`${DB}/predictions/${name}`] = null;
+  updates[`${DB}/scores/${name}`]      = null;
+  await update(ref(db), updates);
+  if(currentUser===name) switchUser();
+  document.getElementById('del-modal')?.remove();
+  toast(`🗑️ Deleted ${name}`);
+  await recalcAndSaveAllScores();
+  renderAdmin();
+};
+
+// ── BOOT ─────────────────────────────────────────────
+async function boot(){
+  const hideLoading = () => {
+    $('loading-screen').style.display='none';
+    $('welcome-screen').style.display='block';
+  };
+  const safetyTimer = setTimeout(()=>{ hideLoading(); setSyncStatus(false); }, 3000);
+  try{
+    await Promise.race([
+      get(ref(db,`${DB}/users`)),
+      new Promise((_,reject)=>setTimeout(()=>reject(new Error('timeout')),2800))
+    ]);
+    clearTimeout(safetyTimer);
+    setSyncStatus(true);
+  } catch(e){
+    clearTimeout(safetyTimer);
+    setSyncStatus(false);
+  }
+  hideLoading();
+  startListeners();
+
+  // If already logged in, go straight to app
+  if(currentUser && state.users[currentUser] !== undefined){
+    // listener will handle render
+  } else if(currentUser){
+    $('welcome-screen').style.display='none';
+    $('main-app').style.display='block';
+    renderUserBar();
+    renderActiveTab();
+  }
+
+  setInterval(()=>{
+    if(!currentUser) return;
+    if(activeTab==='fixtures') renderFixtures();
+    if(activeTab==='mypicks') renderMyPicks();
+  }, 10000);
+}
+
+boot();
+</script>
+</body>
+</html>
